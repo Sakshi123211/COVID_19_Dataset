@@ -1,0 +1,563 @@
+CREATE TABLE covid_19_india (
+    sno                         text,
+    date                        date,
+    time                        text,
+    state_union_territory       text,
+    confirmed_indian_national   text,
+    confirmed_foreign_national  text,
+    cured                       integer,
+    deaths                      integer,
+    confirmed                   integer
+);
+CREATE TABLE covid_vaccine_statewise (
+    col1  TEXT,
+    col2  TEXT,
+    col3  TEXT,
+    col4  TEXT,
+    col5  TEXT,
+    col6  TEXT,
+    col7  TEXT,
+    col8  TEXT,
+    col9  TEXT,
+    col10 TEXT,
+    col11 TEXT,
+    col12 TEXT,
+    col13 TEXT,
+    col14 TEXT,
+    col15 TEXT,
+    col16 TEXT,
+    col17 TEXT,
+    col18 TEXT,
+    col19 TEXT,
+    col20 TEXT,
+    col21 TEXT,
+    col22 TEXT,
+    col23 TEXT,
+    col24 TEXT
+);
+
+CREATE TABLE statewise_testingdetails (
+    col1  TEXT,   -- Date
+    col2  TEXT,   -- State
+    col3  TEXT,   -- TotalSamples
+    col4  TEXT,   -- Negative
+    col5  TEXT    -- Positive
+);
+
+
+SELECT COUNT(*) FROM covid_19_india;
+/* first fix covid_19_india table */
+/*STEP 1 — Find BAD VALUES
+
+Check confirmed_indian_national*/
+SELECT DISTINCT confirmed_indian_national
+FROM covid_19_india
+WHERE confirmed_indian_national IS NOT NULL
+AND confirmed_indian_national !~ '^[0-9]+$';
+
+/* Check confirmed_foreign_national */
+SELECT DISTINCT confirmed_foreign_national
+FROM covid_19_india
+WHERE confirmed_foreign_national IS NOT NULL
+AND confirmed_foreign_national !~ '^[0-9]+$';
+
+/*STEP 2 — CLEAN THE DATA (MANDATORY)
+Replace '-' with NULL */
+
+UPDATE covid_19_india
+SET confirmed_indian_national = NULL
+WHERE confirmed_indian_national = '-';
+
+UPDATE covid_19_india
+SET confirmed_foreign_national = NULL
+WHERE confirmed_foreign_national = '-';
+
+/* STEP 3 — CONVERT COLUMN TYPES 
+Convert Indian National column */
+
+ALTER TABLE covid_19_india
+ALTER COLUMN confirmed_indian_national TYPE INTEGER
+USING confirmed_indian_national::INTEGER;
+
+-- Convert Foreign National column
+ALTER TABLE covid_19_india
+ALTER COLUMN confirmed_foreign_national TYPE INTEGER
+USING confirmed_foreign_national::INTEGER;
+
+/* STEP 4 — HANDLE NULLS */
+
+UPDATE covid_19_india
+SET confirmed_indian_national = 0
+WHERE confirmed_indian_national IS NULL;
+
+UPDATE covid_19_india
+SET confirmed_foreign_national = 0
+WHERE confirmed_foreign_national IS NULL;
+
+SELECT confirmed_indian_national FROM covid_19_india;
+SELECT confirmed_foreign_national FROM covid_19_india;
+
+/* NEXT: FIX covid_vaccine_statewise */
+
+SELECT COUNT(*) FROM covid_vaccine_statewise;
+
+------STEP 1 — RENAME COLUMNS
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col1 TO updated_on;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col2 TO state;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col3 TO total_doses_administered;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col4 TO sessions;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col5 TO sites;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col6 TO first_dose;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col7 TO second_dose;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col8 TO male_doses;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col9 TO female_doses;
+
+ALTER TABLE covid_vaccine_statewise
+RENAME COLUMN col10 TO transgender_doses;
+
+SELECT * FROM covid_vaccine_statewise;
+
+----- CHECK BAD VALUES ('-')
+
+SELECT DISTINCT total_doses_administered
+FROM covid_vaccine_statewise
+WHERE total_doses_administered IS NOT NULL
+AND total_doses_administered !~ '^[0-9]+$';
+
+SELECT DISTINCT first_dose
+FROM covid_vaccine_statewise
+WHERE first_dose IS NOT NULL
+AND first_dose !~ '^[0-9]+$';
+
+
+SELECT DISTINCT second_dose
+FROM covid_vaccine_statewise
+WHERE second_dose IS NOT NULL
+AND second_dose !~ '^[0-9]+$';
+
+---- CLEAN BAD VALUES---
+
+UPDATE covid_vaccine_statewise
+SET total_doses_administered = NULL
+WHERE total_doses_administered = '-';
+
+UPDATE covid_vaccine_statewise
+SET first_dose = NULL
+WHERE first_dose = '-';
+
+UPDATE covid_vaccine_statewise
+SET second_dose = NULL
+WHERE second_dose = '-';
+
+---- CONVERT DATE COLUMN ---
+
+ALTER TABLE covid_vaccine_statewise
+ALTER COLUMN updated_on TYPE DATE
+USING updated_on::DATE;
+
+---- CONVERT NUMERIC COLUMNS ---
+----- for total_doses_administered
+ALTER TABLE covid_vaccine_statewise
+ALTER COLUMN total_doses_administered
+TYPE NUMERIC
+USING total_doses_administered::NUMERIC;
+
+ALTER TABLE covid_vaccine_statewise
+ALTER COLUMN total_doses_administered
+TYPE BIGINT
+USING total_doses_administered::BIGINT;
+
+----- for first_dose
+ALTER TABLE covid_vaccine_statewise
+ALTER COLUMN first_dose
+TYPE NUMERIC
+USING first_dose::NUMERIC;
+
+ALTER TABLE covid_vaccine_statewise
+ALTER COLUMN first_dose
+TYPE BIGINT
+USING first_dose::BIGINT;
+
+----- for second_dose
+ALTER TABLE covid_vaccine_statewise
+ALTER COLUMN second_dose
+TYPE NUMERIC
+USING second_dose::NUMERIC;
+
+ALTER TABLE covid_vaccine_statewise
+ALTER COLUMN second_dose
+TYPE BIGINT
+USING second_dose::BIGINT;
+
+SELECT * FROM covid_vaccine_statewise;
+
+/* Next FIX statewise_testingdetails */
+
+SELECT COUNT(*) FROM statewise_testingdetails;
+
+---- RENAME COLUMNS ---
+ALTER TABLE statewise_testingdetails
+RENAME COLUMN col1 TO date;
+
+ALTER TABLE statewise_testingdetails
+RENAME COLUMN col2 TO state;
+
+ALTER TABLE statewise_testingdetails
+RENAME COLUMN col3 TO total_samples;
+
+ALTER TABLE statewise_testingdetails
+RENAME COLUMN col4 TO negative;
+
+ALTER TABLE statewise_testingdetails
+RENAME COLUMN col5 TO positive;
+
+---- FIND BAD VALUES ('-', decimals) ---
+SELECT DISTINCT total_samples
+FROM statewise_testingdetails
+WHERE total_samples IS NOT NULL
+AND total_samples !~ '^[0-9]+(\.0)?$';
+
+---- CLEAN '-' VALUES ---
+
+UPDATE statewise_testingdetails
+SET total_samples = NULL
+WHERE total_samples = '-';
+
+UPDATE statewise_testingdetails
+SET negative = NULL
+WHERE negative = '-';
+
+UPDATE statewise_testingdetails
+SET positive = NULL
+WHERE positive = '-';
+
+---- CONVERT DATE ---
+ALTER TABLE statewise_testingdetails
+ALTER COLUMN date TYPE DATE
+USING date::DATE;
+
+---- CONVERT NUMERIC COLUMNS ---
+----- First for total_samples
+
+ALTER TABLE statewise_testingdetails
+ALTER COLUMN total_samples TYPE NUMERIC
+USING total_samples::NUMERIC;
+
+ALTER TABLE statewise_testingdetails
+ALTER COLUMN total_samples TYPE BIGINT
+USING total_samples::BIGINT;
+
+----- next for negative
+UPDATE statewise_testingdetails
+SET negative = NULL
+WHERE negative = '' OR negative = ' ';
+
+ALTER TABLE statewise_testingdetails
+ALTER COLUMN negative TYPE NUMERIC
+USING negative::NUMERIC;
+
+ALTER TABLE statewise_testingdetails
+ALTER COLUMN negative TYPE BIGINT
+USING negative::BIGINT;
+
+----- next for positive
+
+UPDATE statewise_testingdetails
+SET positive = NULL
+WHERE positive = '' OR positive = ' ';
+
+ALTER TABLE statewise_testingdetails
+ALTER COLUMN positive TYPE NUMERIC
+USING positive::NUMERIC;
+
+ALTER TABLE statewise_testingdetails
+ALTER COLUMN positive TYPE BIGINT
+USING positive::BIGINT;
+
+---- HANDLE NULLS---
+UPDATE statewise_testingdetails
+SET total_samples = 0
+WHERE total_samples IS NULL;
+
+UPDATE statewise_testingdetails
+SET negative = 0
+WHERE negative IS NULL;
+
+UPDATE statewise_testingdetails
+SET positive = 0
+WHERE positive IS NULL;
+
+
+SELECT COUNT(*) FROM covid_19_india;
+SELECT COUNT(*) FROM covid_vaccine_statewise;
+SELECT COUNT(*) FROM statewise_testingdetails;
+
+
+----- CHECK BASE DATA ---
+SELECT
+    date,
+    state_union_territory,
+    confirmed,
+    deaths,
+    cured
+FROM covid_19_india
+ORDER BY state_union_territory, date
+LIMIT 10;
+
+----- CREATE DAILY NEW CASES (USING WINDOW FUNCTION) ---
+/* 1. LAG(confirmed) → previous day confirmed
+2. Subtraction → new cases per day
+3. PARTITION BY state → calculated state-wise */ 
+
+SELECT
+    date,
+    state_union_territory AS state,
+    confirmed,
+    confirmed - LAG(confirmed) OVER (
+        PARTITION BY state_union_territory
+        ORDER BY date
+    ) AS daily_new_cases
+FROM covid_19_india
+ORDER BY state, date;
+
+
+----- CREATE A PERMANENT VIEW ---
+CREATE OR REPLACE VIEW daily_new_cases AS
+SELECT
+    date,
+    state_union_territory AS state,
+    confirmed,
+    deaths,
+    cured,
+    COALESCE(
+        confirmed - LAG(confirmed) OVER (
+            PARTITION BY state_union_territory
+            ORDER BY date
+        ),
+        0
+    ) AS daily_new_cases
+FROM covid_19_india;
+
+SELECT *
+FROM daily_new_cases
+WHERE state = 'Maharashtra'
+ORDER BY date;
+
+---- India total daily cases ---
+SELECT
+    date,
+    SUM(daily_new_cases) AS india_daily_cases
+FROM daily_new_cases
+GROUP BY date
+ORDER BY date;
+
+/* ---- Combine Indian + Foreign Confirmed Cases 
+		Create a unified total_confirmed */ 
+SELECT
+    date,
+    state_union_territory AS state,
+    COALESCE(confirmed_indian_national, 0)
+  + COALESCE(confirmed_foreign_national, 0) AS total_confirmed,
+    deaths,
+    cured
+FROM covid_19_india;
+
+/* Create Case Fatality Rate (CFR)
+	Formula:(deaths / total_confirmed) * 100 */
+
+SELECT
+    date,
+    state_union_territory AS state,
+    total_confirmed,
+    deaths,
+    ROUND(
+        (deaths::NUMERIC / NULLIF(total_confirmed, 0)) * 100,
+        2
+    ) AS case_fatality_rate
+FROM (
+    SELECT
+        date,
+        state_union_territory,
+        COALESCE(confirmed_indian_national, 0)
+      + COALESCE(confirmed_foreign_national, 0) AS total_confirmed,
+        deaths
+    FROM covid_19_india
+) t;
+
+/* CREATE CLEAN CASES VIEW */
+CREATE OR REPLACE VIEW covid_cases AS
+SELECT
+    date,
+    state_union_territory AS state,
+    COALESCE(confirmed_indian_national, 0)
+  + COALESCE(confirmed_foreign_national, 0) AS total_confirmed,
+    deaths,
+    cured,
+    ROUND(
+        (deaths::NUMERIC /
+        NULLIF(
+            COALESCE(confirmed_indian_national, 0)
+          + COALESCE(confirmed_foreign_national, 0),
+        0)) * 100,
+        2
+    ) AS case_fatality_rate
+FROM covid_19_india;
+
+/* CREATE CLEAN TESTING VIEW */
+
+CREATE OR REPLACE VIEW covid_testing AS
+SELECT
+    date,
+    state,
+    total_samples,
+    negative,
+    positive
+FROM statewise_testingdetails;
+
+
+/* covid_cases and covid_testing table
+	LEFT JOIN : keeps all case records */
+SELECT
+    c.date,
+    c.state,
+    c.total_confirmed,
+    c.deaths,
+    c.cured,
+    c.case_fatality_rate,
+    t.total_samples,
+    t.positive,
+    t.negative
+FROM covid_cases c
+LEFT JOIN covid_testing t
+ON c.date = t.date
+AND c.state = t.state
+ORDER BY c.state, c.date;
+
+/* CREATE FINAL ANALYTICS VIEW */
+CREATE OR REPLACE VIEW covid_combined_analysis AS
+SELECT
+    c.date,
+    c.state,
+    c.total_confirmed,
+    c.deaths,
+    c.cured,
+    c.case_fatality_rate,
+    t.total_samples,
+    t.positive,
+    t.negative
+FROM covid_cases c
+LEFT JOIN covid_testing t
+ON c.date = t.date
+AND c.state = t.state;
+
+
+/* CREATE CLEANED covid_summary TABLE
+This table combines all three datasets.
+Uses LEFT JOIN (no data loss)*/ 
+
+DROP TABLE IF EXISTS covid_summary;
+
+CREATE TABLE covid_summary AS
+SELECT
+    c.state_union_territory AS state,
+    c.date,
+    c.confirmed,
+    c.deaths,
+    c.cured,
+
+    -- Daily new cases
+    COALESCE(
+        c.confirmed - LAG(c.confirmed) OVER (
+            PARTITION BY c.state_union_territory
+            ORDER BY c.date
+        ),
+        0
+    ) AS daily_new_cases,
+
+    -- Testing data
+    t.total_samples,
+    t.positive,
+
+    -- Vaccination data
+    v.first_dose,
+    v.second_dose,
+
+    -- Case Fatality Rate (CFR)
+    ROUND(
+        (c.deaths::NUMERIC / NULLIF(c.confirmed, 0)) * 100,
+        2
+    ) AS cfr
+
+FROM covid_19_india c
+LEFT JOIN statewise_testingdetails t
+    ON c.date = t.date
+   AND c.state_union_territory = t.state
+LEFT JOIN covid_vaccine_statewise v
+    ON c.date = v.updated_on
+   AND c.state_union_territory = v.state;
+
+/* ADD Positive_Test_Rate
+Formula:(Positive / TotalSamples) * 100 */ 
+
+ALTER TABLE covid_summary
+ADD COLUMN positive_test_rate NUMERIC(5,2);
+
+UPDATE covid_summary
+SET positive_test_rate =
+    ROUND(
+        (positive::NUMERIC / NULLIF(total_samples, 0)) * 100,
+        2
+    );
+
+/* ADD Vaccination_Rate
+Population is not available in SQL, so we leave this column for Excel */ 
+
+ALTER TABLE covid_summary
+ADD COLUMN vaccination_rate NUMERIC(5,2);
+
+/* CREATE Risk_Level COLUMN
+Rules:
+High Risk → CFR > 2 AND Positive Rate > 10
+Medium Risk → One condition true
+Low Risk → Both below */
+
+ALTER TABLE covid_summary
+ADD COLUMN risk_level TEXT;
+
+UPDATE covid_summary
+SET risk_level =
+    CASE
+        WHEN cfr > 2 AND positive_test_rate > 10
+            THEN 'High Risk'
+        WHEN cfr > 2 OR positive_test_rate > 10
+            THEN 'Medium Risk'
+        ELSE 'Low Risk'
+    END;
+
+/* FINAL VERIFICATION */
+
+SELECT *
+FROM covid_summary
+WHERE total_samples IS NOT NULL
+ORDER BY date
+LIMIT 10;
+
+
